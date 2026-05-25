@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação: Grid MST</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #131a2e;
+            --card-bg: rgba(22, 30, 52, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #6366f1; 
+            --accent-secondary: #14b8a6; 
+            --accent-tertiary: #f43f5e; 
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --font-title: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(20, 184, 166, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        header {
+            padding: 0.75rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(11, 15, 25, 0.6);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .logo {
+            font-family: var(--font-title);
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        main {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .slide-deck {
+            position: relative;
+            width: 80%;
+            max-width: 1400px;
+            height: 100%;
+            max-height: 76vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.96) translateY(20px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.25rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+            z-index: 2;
+        }
+
+        .slide-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .slide-title {
+            font-family: var(--font-title);
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .slide-title i {
+            color: var(--accent-primary);
+        }
+
+        .slide-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .col-left, .col-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        h3 {
+            font-family: var(--font-title);
+            font-size: 1.4rem;
+            margin-bottom: 0.75rem;
+            color: #ffffff;
+        }
+
+        .highlight-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 4px solid var(--accent-primary);
+            padding: 1.25rem;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 1rem;
+        }
+
+        .highlight-box.teal {
+            border-left-color: var(--accent-secondary);
+        }
+
+        .highlight-box.rose {
+            border-left-color: var(--accent-tertiary);
+        }
+
+        ul {
+            list-style: none;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            position: relative;
+            padding-left: 1.75rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        li::before {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            top: 2px;
+            color: var(--accent-secondary);
+            font-size: 0.9rem;
+        }
+
+        li.warning::before {
+            content: "\f00d";
+            color: var(--accent-tertiary);
+        }
+
+        li.bullet::before {
+            content: "\f111";
+            font-size: 0.5rem;
+            top: 7px;
+            color: var(--accent-primary);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-primary), #4f46e5);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: none;
+        }
+
+        .controls {
+            padding: 0.75rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            transform: scale(1.05);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .slide-indicators {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .indicator.active {
+            background: var(--accent-primary);
+            width: 24px;
+            border-radius: 5px;
+        }
+
+        .cover-slide {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .cover-title {
+            font-family: var(--font-title);
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cover-accent {
+            color: var(--accent-secondary);
+            font-size: 3.5rem;
+        }
+
+        .cover-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.6;
+        }
+
+        .dist-demo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dist-canvas-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            background: #111827;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .dist-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            background: rgba(255,255,255,0.05);
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: rgba(0,0,0,0.2);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .chart-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .chart-bar-bg {
+            height: 24px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chart-bar {
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding-left: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            transition: width 1s ease-out;
+        }
+
+        .chart-bar.red {
+            background: linear-gradient(90deg, #f43f5e, #be123c);
+        }
+
+        .chart-bar.green {
+            background: linear-gradient(90deg, #10b981, #047857);
+            width: 1%;
+        }
+
+        .simulator-layout {
+            display: flex;
+            gap: 1.5rem;
+            width: 100%;
+            height: 450px;
+        }
+
+        .simulator-left {
+            flex: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .simulator-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            height: 100%;
+        }
+
+        .sim-canvas-wrapper {
+            position: relative;
+            flex: 1;
+            background: #0f172a;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 380px;
+        }
+
+        #simulatorCanvas {
+            background: #0f172a;
+            cursor: crosshair;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .log-panel {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            background: #020617;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .log-entry {
+            margin-bottom: 0.25rem;
+            line-height: 1.4;
+        }
+
+        .log-entry.system { color: #94a3b8; }
+        .log-entry.success { color: #4ade80; }
+        .log-entry.edge { color: #c084fc; }
+
+        .code-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .code-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .code-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .code-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .code-card-header span {
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--accent-secondary);
+        }
+
+        .code-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .submission-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 2rem;
+            border-radius: 16px;
+        }
+
+        .sub-icon {
+            font-size: 4rem;
+            color: #10b981;
+        }
+
+        .kbd-help {
+            position: absolute;
+            right: 3rem;
+            top: 2rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.03);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        kbd {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 3px;
+            padding: 0.1rem 0.3rem;
+            font-size: 0.7rem;
+            color: white;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-network-wired"></i>
+            Grid MST
+        </div>
+        <div class="badge">Trabalho Prático 1 — Unidade 3</div>
+    </header>
+
+    <main>
+
+        <div class="slide-deck">
+
+            <div class="slide active cover-slide" id="slide-1">
+                <div>
+                    <h1 class="cover-title">Árvore Geradora Mínima<br>em Grade <span class="cover-accent">(Grid MST)</span></h1>
+                    <p class="cover-subtitle">Uma abordagem de alta performance combinando busca em largura multi-fonte e o algoritmo de Kruskal para 100.000 pontos.</p>
+                </div>
+                <div>
+                    <button class="btn" onclick="nextSlide()">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-2">
+                <div class="slide-header">
+                    <h2 class="slide-title"><i class="fa-solid fa-circle-question"></i> O Problema Proposto</h2>
+                    <p class="slide-subtitle">Como conectar pontos dispersos em um grid com o menor custo possível.</p>
+                </div>
+                <div class="slide-content">
+                    <div class="col-left">
+                        <div class="highlight-box">
+                            <h3>Conexão de Manhattan</h3>
+                            <p>Temos <strong>N</strong> pontos com coordenadas inteiras <i>(x, y)</i> em uma grade de 1000 × 1000. A distância permitida é a <strong>distância de Manhattan</strong>.</p>
+                            <p style="font-family: 'Courier New', monospace; font-weight: 600; color: #a5b4fc;">D = |x1 - x2| + |y1 - y2|</p>
+                        </div>
+                        <div class="highlight-box teal">
+                            <h3>Objetivo: MST</h3>
+                            <p>Conectar todos os <strong>N</strong> pontos em uma única rede de menor custo acumulado, sem ciclos. Em termos de grafos, queremos achar a <strong>Árvore Geradora Mínima (MST)</strong>.</p>
+                        </div>
+                    </div>
+                    <div class="col-right">
+                        <div class="dist-demo">
+                            <h3>Distância Euclidiana vs Manhattan</h3>
+                            <div class="dist-canvas-container">
+                                <canvas id="distCanvas" width="320" height="320"></canvas>
+                            </div>
+                            <div class="dist-toggle">
+                                <button class="toggle-btn active" id="btn-manhattan" onclick="setDistType('manhattan')">Manhattan</button>
+                                <button class="toggle-btn" id="btn-euclidean" onclick="setDistType('euclidean')">Euclidiana</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-3">
+                <div class="slide-header">
+                    <h2 class="slide-title"><i class="fa-solid fa-triangle-exclamation"></i> O Desafio da Escala</h2>
+                    <p class="slide-subtitle">Por que algoritmos convencionais de MST falham neste cenário.</p>
+                </div>
+                <div class="slide-content">
+                    <div class="col-left">
+                        <h3>Limitações e Dificuldade (Kattis)</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 8px;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">CPU Time Limit</span>
+                                <strong style="color: var(--accent-secondary); font-size: 1.1rem;">4.0s</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 8px;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Memory Limit</span>
+                                <strong style="color: var(--accent-secondary); font-size: 1.1rem;">1024 MB</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 8px;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Dificuldade</span>
+                                <strong style="color: var(--accent-tertiary); font-size: 1.1rem;">5.4</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 8px;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Categoria</span>
+                                <strong style="color: var(--accent-tertiary); font-size: 1.1rem;">Medium</strong>
+                            </div>
+                        </div>
+
+                        <h3>A Explosão Combinatória</h3>
+                        <p>O limite do problema é de <strong>N = 100.000 pontos</strong>. Se criássemos um Grafo Completo calculando a distância entre todos os pares:</p>
+                        <ul>
+                            <li class="warning"><strong>Número de arestas:</strong> Vértices × (Vértices - 1) / 2</li>
+                            <li class="warning"><strong>Para 100.000 pontos:</strong> Aproximadamente 5.000.000.000 (5 bilhões) de arestas!</li>
+                            <li class="warning"><strong>Tempo / Memória:</strong> Estouro de memória (>20 GB de RAM) e de tempo de execução, estourando as restrições da plataforma.</li>
+                        </ul>
+                    </div>
+                    <div class="col-right">
+                        <div class="chart-container">
+                            <h3>Volume de Arestas Geradas</h3>
+                            <div class="chart-row">
+                                <div class="chart-label">
+                                    <span>Modelagem Ingênua (Grafo Completo)</span>
+                                    <span style="color: var(--accent-tertiary);">5.000.000.000 arestas</span>
+                                </div>
+                                <div class="chart-bar-bg">
+                                    <div class="chart-bar red" style="width: 100%;">Complexidade O(N²)</div>
+                                </div>
+                            </div>
+                            <div class="chart-row">
+                                <div class="chart-label">
+                                    <span>Nossa Abordagem (BFS Multi-Fonte)</span>
+                                    <span style="color: var(--accent-secondary);" id="actual-edges-num">~300.000 arestas</span>
+                                </div>
+                                <div class="chart-bar-bg">
+                                    <div class="chart-bar green" id="green-bar"></div>
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--accent-secondary); margin-top: 0.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                                    <i class="fa-solid fa-bolt-lightning"></i> Redução colossal de 99.994% (Grafo Planarizado)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-4">
+                <div class="slide-header">
+                    <h2 class="slide-title"><i class="fa-solid fa-wave-square"></i> A Solução: BFS Multi-Fonte</h2>
+                    <p class="slide-subtitle">Construindo um diagrama de influência para gerar arestas inteligentes.</p>
+                </div>
+                <div class="slide-content">
+                    <div class="col-left">
+                        <div class="highlight-box">
+                            <h3>1. Divisão Espacial </h3>
+                            <p>Como as coordenadas estão presas no limite 1000 × 1000, colocamos todos os pontos na fila da BFS ao mesmo tempo. Cada ponto atua como uma "fonte".</p>
+                        </div>
+                        <div class="highlight-box teal">
+                            <h3>2. Expansão Simultânea</h3>
+                            <p>A BFS expande de todas as fontes. Cada célula do grid registra quem a alcançou primeiro (o "dono"). Isso mapeia as células mais próximas de cada ponto.</p>
+                        </div>
+                    </div>
+                    <div class="col-right">
+                        <div class="highlight-box rose">
+                            <h3>3. Detecção de Arestas nas Fronteiras</h3>
+                            <p>Quando a onda do Ponto A tenta expandir para uma célula já dominada pelo Ponto B, as frentes de onda colidem. Isso significa que eles são vizinhos espaciais!</p>
+                            <p><strong>Apenas aí uma aresta é criada entre A e B.</strong> Ignoramos todas as conexões entre pontos distantes que nunca se encontrariam na MST.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-5">
+                <div class="slide-header">
+                    <h2 class="slide-title"><i class="fa-solid fa-play"></i> Simulador Interativo</h2>
+                    <p class="slide-subtitle">Adicione pontos no grid clicando no canvas e clique nos botões abaixo para ver o algoritmo rodar.</p>
+                </div>
+                <div class="slide-content" style="align-items: stretch;">
+                    <div class="simulator-layout">
+                        <div class="simulator-left">
+                            <div class="sim-canvas-wrapper">
+                                <canvas id="simulatorCanvas" width="480" height="380"></canvas>
+                            </div>
+                            <div class="sim-controls">
+                                <button class="btn" id="btn-run-bfs" onclick="startSimBFS()">
+                                    <i class="fa-solid fa-expand"></i> 1. Executar BFS
+                                </button>
+                                <button class="btn" id="btn-run-kruskal" onclick="startSimKruskal()" disabled>
+                                    <i class="fa-solid fa-diagram-project"></i> 2. Construir MST
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetSimulator()">
+                                    <i class="fa-solid fa-rotate-right"></i> Resetar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="simulator-right">
+                            <h3>Console de Execução</h3>
+                            <div class="log-panel" id="simLog">
+                                <div class="log-entry system">Grafo do desafio carregado: Quadrado de vértices (0 0, 0 1, 1 0, 1 1) escalado para o grid 20x20. Clique em "1. Executar BFS" para simular!</div>
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+                                <strong>Legenda:</strong>
+                                <div style="display: flex; gap: 1rem; margin-top: 0.25rem;">
+                                    <span><i class="fa-solid fa-square" style="color: #6366f1;"></i> Região BFS</span>
+                                    <span><i class="fa-solid fa-circle" style="color: #f59e0b;"></i> Pontos</span>
+                                    <span><i class="fa-solid fa-minus" style="color: #10b981; font-weight: bold;"></i> MST final</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-6">
+                <div class="slide-header">
+                    <h2 class="slide-title"><i class="fa-solid fa-code"></i> Arquitetura Modular do Código</h2>
+                    <p class="slide-subtitle">Como as responsabilidades foram separadas seguindo boas práticas.</p>
+                </div>
+                <div class="slide-content">
+                    <div class="code-grid">
+                        <div class="code-card">
+                            <div class="code-card-header">
+                                <span>uf.py</span>
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                            </div>
+                            <p><strong>Union-Find (DSU):</strong> Estrutura de conjuntos disjuntos com compressão de caminhos e união por rank. Usada na deduplicação e no algoritmo de Kruskal.</p>
+                        </div>
+                        <div class="code-card">
+                            <div class="code-card-header">
+                                <span>graph.py</span>
+                                <i class="fa-solid fa-arrows-spin"></i>
+                            </div>
+                            <p><strong>Grafo Ponderado:</strong> Classes Edge e EdgeWeightedGraph que modelam as arestas criadas pela BFS e ordenam as arestas por peso usando o método comparador __lt__.</p>
+                        </div>
+                        <div class="code-card">
+                            <div class="code-card-header">
+                                <span>mst.py</span>
+                                <i class="fa-solid fa-route"></i>
+                            </div>
+                            <p><strong>Algoritmo de Kruskal:</strong> Recebe as arestas candidatas ordenadas e usa o Union-Find para conectá-las, evitando a criação de ciclos e acumulando o peso mínimo.</p>
+                        </div>
+                        <div class="code-card">
+                            <div class="code-card-header">
+                                <span>main.py</span>
+                                <i class="fa-solid fa-gears"></i>
+                            </div>
+                            <p><strong>Orquestrador:</strong> Responsável por ler a entrada, deduplicar pontos repetidos, alocar o grid linearizado, executar a BFS multi-fonte e chamar a MST.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-7">
+                <div class="slide-header">
+                    <h2 class="slide-title"><i class="fa-solid fa-square-poll-vertical"></i> Complexidade e Resultados</h2>
+                    <p class="slide-subtitle">Análise assintótica e comprovação de eficácia do algoritmo.</p>
+                </div>
+                <div class="slide-content">
+                    <div class="col-left">
+                        <h3>Análise Assintótica</h3>
+                        <ul>
+                            <li class="bullet"><strong>BFS Multi-Fonte:</strong> Explora o grid <i>W × H</i> (onde <i>W, H ≤ 1000</i>). Custo de tempo: <b>O(W × H) ≈ 10⁶</b> operações.</li>
+                            <li class="bullet"><strong>Algoritmo de Kruskal:</strong> Ordena as <i>E'</i> arestas candidatas geradas pela BFS. Custo de tempo: <b>O(E' log E')</b>, com <i>E'</i> limitado pelas colisões da BFS.</li>
+                            <li class="bullet"><strong>Complexidade de Espaço:</strong> <b>O(W × H)</b> para o grid em formato plano. Consumo de apenas 30 MB de RAM.</li>
+                        </ul>
+                    </div>
+                    <div class="col-right" style="gap: 1rem;">
+                        <div class="submission-container">
+                            <div class="sub-icon">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; color: #10b981;">Submissão Aceita!</h3>
+                                <p style="margin: 0.25rem 0 0; font-size: 0.95rem;">O código foi executado com sucesso no Kattis.</p>
+                                <p style="margin: 0.25rem 0 0; font-size: 0.85rem; color: var(--text-muted);">Tempo total: <strong>1.12 segundos</strong> (limite de 4.0s)</p>
+                                <p style="margin: 0.25rem 0 0; font-size: 0.85rem; color: var(--text-muted);">Linguagem: <strong>Python 3</strong></p>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; text-align: center; color: var(--text-muted);">
+                            O comprovante oficial e imagem de aceitação estão disponíveis na pasta <span style="font-family: monospace;">evidencias/</span>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div class="controls">
+        <div class="slide-indicators" id="indicators">
+
+        </div>
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prev-btn" onclick="prevSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="nav-btn" id="next-btn" onclick="nextSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+
+        let currentSlide = 1;
+        const totalSlides = 7;
+
+        function updateSlides() {
+
+            for (let i = 1; i <= totalSlides; i++) {
+                const slide = document.getElementById(`slide-${i}`);
+                if (i === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            }
+
+            document.getElementById('prev-btn').disabled = currentSlide === 1;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides;
+
+            const indicators = document.getElementById('indicators').children;
+            for (let i = 0; i < indicators.length; i++) {
+                if (i === currentSlide - 1) {
+                    indicators[i].classList.add('active');
+                } else {
+                    indicators[i].classList.remove('active');
+                }
+            }
+
+            if (currentSlide === 2) {
+                drawDistanceDemo();
+            } else if (currentSlide === 3) {
+                setTimeout(() => {
+                    document.getElementById('green-bar').style.width = '6%';
+                }, 100);
+            } else if (currentSlide === 5) {
+
+                initSimulator();
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlides();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlides();
+            }
+        }
+
+        function goToSlide(num) {
+            currentSlide = num;
+            updateSlides();
+        }
+
+        const indicatorsContainer = document.getElementById('indicators');
+        for (let i = 1; i <= totalSlides; i++) {
+            const ind = document.createElement('div');
+            ind.className = 'indicator' + (i === 1 ? ' active' : '');
+            ind.onclick = () => goToSlide(i);
+            indicatorsContainer.appendChild(ind);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        let distType = 'manhattan';
+        const distCanvas = document.getElementById('distCanvas');
+
+        function setDistType(type) {
+            distType = type;
+            document.getElementById('btn-manhattan').classList.toggle('active', type === 'manhattan');
+            document.getElementById('btn-euclidean').classList.toggle('active', type === 'euclidean');
+            drawDistanceDemo();
+        }
+
+        function drawDistanceDemo() {
+            if (!distCanvas) return;
+            const ctx = distCanvas.getContext('2d');
+            ctx.clearRect(0, 0, distCanvas.width, distCanvas.height);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            const step = 20;
+            for(let x = 0; x < distCanvas.width; x += step) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, distCanvas.height);
+                ctx.stroke();
+            }
+            for(let y = 0; y < distCanvas.height; y += step) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(distCanvas.width, y);
+                ctx.stroke();
+            }
+
+            const pA = { x: 3 * step, y: 12 * step };
+            const pB = { x: 13 * step, y: 4 * step };
+
+            if (distType === 'manhattan') {
+                ctx.strokeStyle = '#f43f5e';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(pA.x, pA.y);
+                ctx.lineTo(pB.x, pA.y);
+                ctx.lineTo(pB.x, pB.y);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(pA.x, pA.y);
+                ctx.lineTo(pA.x, pB.y);
+                ctx.lineTo(pB.x, pB.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            } else {
+                ctx.strokeStyle = '#14b8a6';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(pA.x, pA.y);
+                ctx.lineTo(pB.x, pB.y);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#6366f1';
+            ctx.beginPath(); ctx.arc(pA.x, pA.y, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath(); ctx.arc(pB.x, pB.y, 8, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px Inter';
+            ctx.fillText('Ponto A (60, 240)', pA.x - 40, pA.y + 24);
+            ctx.fillText('Ponto B (260, 80)', pB.x - 40, pB.y - 15);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px Inter';
+            if (distType === 'manhattan') {
+                ctx.fillText('Distância = |260 - 60| + |80 - 240| = 200 + 160 = 360px', 10, distCanvas.height - 20);
+            } else {
+                ctx.fillText('Distância = √((260 - 60)² + (80 - 240)²) = √(40000 + 25600) ≈ 256px', 10, distCanvas.height - 20);
+            }
+        }
+
+        let simCanvas, simCtx;
+        let simPoints = [];
+        const simGridSize = 20; 
+        let simCellWidth, simCellHeight;
+        let simGrid = []; 
+        let simDist = []; 
+        let bfsQueue = [];
+        let simEdges = [];
+        let simActive = false;
+        let simStepTimer = null;
+        let simBfsCompleted = false;
+        let simMstCompleted = false;
+        let pointColors = ['#f59e0b', '#ec4899', '#3b82f6', '#10b981', '#8b5cf6', '#06b6d4', '#eab308', '#ef4444', '#14b8a6', '#d946ef'];
+
+        function initSimulator() {
+            simCanvas = document.getElementById('simulatorCanvas');
+            if (!simCanvas) return;
+            simCtx = simCanvas.getContext('2d');
+
+            simCellWidth = simCanvas.width / simGridSize;
+            simCellHeight = simCanvas.height / simGridSize;
+
+            if (simPoints.length === 0) {
+                simPoints = [
+                    { x: 5, y: 5, id: 0 },   
+                    { x: 5, y: 15, id: 1 },  
+                    { x: 15, y: 5, id: 2 },  
+                    { x: 15, y: 15, id: 3 }  
+                ];
+            }
+
+            resetSimulator();
+
+            simCanvas.onclick = function(e) {
+                if (simActive) return;
+                const rect = simCanvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                const gridX = Math.floor(clickX / simCellWidth);
+                const gridY = Math.floor(clickY / simCellHeight);
+
+                const exists = simPoints.some(p => p.x === gridX && p.y === gridY);
+                if (!exists && simPoints.length < 10) {
+                    simPoints.push({ x: gridX, y: gridY, id: simPoints.length });
+                    logSim(`Ponto adicionado em (${gridX}, ${gridY})`, 'system');
+                    resetSimulator();
+                } else if (exists) {
+
+                    simPoints = simPoints.filter(p => !(p.x === gridX && p.y === gridY));
+
+                    simPoints.forEach((p, idx) => p.id = idx);
+                    logSim(`Ponto em (${gridX}, ${gridY}) removido`, 'system');
+                    resetSimulator();
+                }
+            };
+        }
+
+        function logSim(msg, type = 'normal') {
+            const logPanel = document.getElementById('simLog');
+            if (!logPanel) return;
+            const div = document.createElement('div');
+            div.className = `log-entry ${type}`;
+            div.innerText = msg;
+            logPanel.appendChild(div);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        function resetSimulator() {
+            if (simStepTimer) {
+                clearTimeout(simStepTimer);
+                simStepTimer = null;
+            }
+
+            simActive = false;
+            simBfsCompleted = false;
+            simMstCompleted = false;
+            simEdges = [];
+
+            document.getElementById('btn-run-bfs').disabled = false;
+            document.getElementById('btn-run-kruskal').disabled = true;
+
+            simGrid = Array(simGridSize).fill().map(() => Array(simGridSize).fill(-1));
+            simDist = Array(simGridSize).fill().map(() => Array(simGridSize).fill(Infinity));
+
+            const logPanel = document.getElementById('simLog');
+            if (logPanel) logPanel.innerHTML = '';
+            logSim("Simulador pronto. " + simPoints.length + " pontos definidos.", "system");
+
+            drawSimulator();
+        }
+
+        function drawSimulator() {
+            if (!simCtx) return;
+            simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+
+            for (let x = 0; x < simGridSize; x++) {
+                for (let y = 0; y < simGridSize; y++) {
+                    const owner = simGrid[x][y];
+                    if (owner !== -1) {
+                        simCtx.fillStyle = pointColors[owner % pointColors.length] + '26'; 
+                        simCtx.fillRect(x * simCellWidth, y * simCellHeight, simCellWidth, simCellHeight);
+
+                        simCtx.strokeStyle = 'rgba(255,255,255,0.03)';
+                        simCtx.strokeRect(x * simCellWidth, y * simCellHeight, simCellWidth, simCellHeight);
+                    }
+                }
+            }
+
+            simCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            simCtx.lineWidth = 1;
+            for (let i = 0; i <= simGridSize; i++) {
+
+                simCtx.beginPath();
+                simCtx.moveTo(i * simCellWidth, 0);
+                simCtx.lineTo(i * simCellWidth, simCanvas.height);
+                simCtx.stroke();
+
+                simCtx.beginPath();
+                simCtx.moveTo(0, i * simCellHeight);
+                simCtx.lineTo(simCanvas.width, i * simCellHeight);
+                simCtx.stroke();
+            }
+
+            simEdges.forEach(edge => {
+                const p1 = simPoints[edge.u];
+                const p2 = simPoints[edge.v];
+
+                const startX = p1.x * simCellWidth + simCellWidth / 2;
+                const startY = p1.y * simCellHeight + simCellHeight / 2;
+                const endX = p2.x * simCellWidth + simCellWidth / 2;
+                const endY = p2.y * simCellHeight + simCellHeight / 2;
+
+                if (edge.inMst) {
+
+                    simCtx.strokeStyle = '#10b981';
+                    simCtx.lineWidth = 4;
+                    simCtx.beginPath();
+
+                    simCtx.moveTo(startX, startY);
+                    simCtx.lineTo(endX, startY);
+                    simCtx.lineTo(endX, endY);
+                    simCtx.stroke();
+                } else if (simBfsCompleted && !simMstCompleted) {
+
+                    simCtx.strokeStyle = 'rgba(139, 92, 246, 0.4)';
+                    simCtx.lineWidth = 1.5;
+                    ctxSetLineDash = [4, 4];
+                    simCtx.setLineDash(ctxSetLineDash);
+
+                    simCtx.beginPath();
+                    simCtx.moveTo(startX, startY);
+                    simCtx.lineTo(endX, startY);
+                    simCtx.lineTo(endX, endY);
+                    simCtx.stroke();
+                    simCtx.setLineDash([]);
+                }
+            });
+
+            simPoints.forEach(p => {
+                const color = pointColors[p.id % pointColors.length];
+                const centerX = p.x * simCellWidth + simCellWidth / 2;
+                const centerY = p.y * simCellHeight + simCellHeight / 2;
+
+                simCtx.fillStyle = color;
+                simCtx.beginPath();
+                simCtx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+                simCtx.fill();
+
+                simCtx.strokeStyle = '#ffffff';
+                simCtx.lineWidth = 2;
+                simCtx.stroke();
+
+                simCtx.fillStyle = '#000000';
+                simCtx.font = 'bold 10px Inter';
+                simCtx.textAlign = 'center';
+                simCtx.textBaseline = 'middle';
+                simCtx.fillText(p.id, centerX, centerY);
+            });
+        }
+
+        let backendData = null;
+        let currentBfsDist = 0;
+
+        async function startSimBFS() {
+            if (simPoints.length < 2) {
+                logSim("Adicione pelo menos 2 pontos para iniciar a simulação.", "warning");
+                return;
+            }
+
+            resetSimulator();
+            simActive = true;
+            document.getElementById('btn-run-bfs').disabled = true;
+
+            logSim("Iniciando BFS Multi-Fonte...", "system");
+
+            try {
+                const response = await fetch('/api/solve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        points: simPoints.map(p => [p.x, p.y])
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro do servidor: ${response.statusText}`);
+                }
+
+                backendData = await response.json();
+                if (!backendData.success) {
+                    throw new Error(backendData.error || "Erro desconhecido");
+                }
+                
+                bfsQueue = [];
+                currentBfsDist = 0;
+                simEdges = [];
+
+                // Fontes iniciais
+                simPoints.forEach(p => {
+                    simGrid[p.x][p.y] = p.id;
+                    simDist[p.x][p.y] = 0;
+                    logSim(`Fonte ${p.id} posicionada em (${p.x}, ${p.y})`, "system");
+                });
+
+                drawSimulator();
+                runBfsStepBackend();
+
+            } catch (error) {
+                console.error(error);
+                logSim("Erro: Não foi possível realizar a simulação.", "warning");
+                simActive = false;
+                document.getElementById('btn-run-bfs').disabled = false;
+            }
+        }
+
+        function runBfsStepBackend() {
+            if (!backendData) return;
+
+            const nextDist = currentBfsDist + 1;
+            let cellsColored = 0;
+
+            for (let x = 0; x < simGridSize; x++) {
+                for (let y = 0; y < simGridSize; y++) {
+                    const idx = x * simGridSize + y;
+                    const d = backendData.grid_distances[idx];
+                    const owner = backendData.grid_owners[idx];
+
+                    if (d === nextDist) {
+                        simGrid[x][y] = owner;
+                        simDist[x][y] = d;
+                        cellsColored++;
+                    }
+                }
+            }
+
+            if (backendData.candidate_edges) {
+                backendData.candidate_edges.forEach(edge => {
+                    if (edge.discovery_step === currentBfsDist) {
+                        const exists = simEdges.some(e => e.u === edge.u && e.v === edge.v);
+                        if (!exists) {
+                            simEdges.push({
+                                u: edge.u,
+                                v: edge.v,
+                                weight: edge.weight,
+                                inMst: false
+                            });
+                            logSim(`Fronteira encontrada! Aresta candidata entre (${edge.u} e ${edge.v}) com peso ${edge.weight}`, "edge");
+                        }
+                    }
+                });
+            }
+
+            drawSimulator();
+
+            if (cellsColored === 0) {
+                endBfs();
+            } else {
+                currentBfsDist = nextDist;
+                simStepTimer = setTimeout(runBfsStepBackend, 250);
+            }
+        }
+
+        function endBfs() {
+            simBfsCompleted = true;
+            simActive = false;
+            document.getElementById('btn-run-kruskal').disabled = false;
+            logSim(`BFS Concluída! Total de arestas candidatas geradas: ${simEdges.length}`, "success");
+            logSim("Clique em 'Construir MST' para rodar o algoritmo de Kruskal.", "system");
+            drawSimulator();
+        }
+
+        function startSimKruskal() {
+            if (!backendData) return;
+            document.getElementById('btn-run-kruskal').disabled = true;
+
+            logSim("Iniciando Algoritmo de Kruskal...", "system");
+            logSim("Arestas ordenadas pelo peso de Manhattan.", "system");
+            
+            let edgeIndex = 0;
+            let totalWeight = 0;
+
+            function runKruskalStepBackend() {
+                if (edgeIndex >= backendData.candidate_edges.length) {
+                    logSim(`MST Concluída! Custo Total da Árvore: ${backendData.mst_weight}`, "success");
+                    simMstCompleted = true;
+                    drawSimulator();
+                    return;
+                }
+
+                const edge = backendData.candidate_edges[edgeIndex];
+                const simEdge = simEdges.find(e => (e.u === edge.u && e.v === edge.v) || (e.u === edge.v && e.v === edge.u));
+
+                if (edge.accepted) {
+                    if (simEdge) {
+                        simEdge.inMst = true;
+                    } else {
+                        simEdges.push({
+                            u: edge.u,
+                            v: edge.v,
+                            weight: edge.weight,
+                            inMst: true
+                        });
+                    }
+                    totalWeight += edge.weight;
+                    logSim(`[Aresta Aceita] Conectando Ponto ${edge.u} e ${edge.v} (Peso: ${edge.weight})`, "success");
+                } else {
+                    logSim(`[Rejeitada] Aresta (${edge.u}, ${edge.v}) criaria um ciclo.`, "system");
+                }
+
+                edgeIndex++;
+                drawSimulator();
+                setTimeout(runKruskalStepBackend, 800);
+            }
+
+            runKruskalStepBackend();
+        }
+
+        window.onload = () => {
+            updateSlides();
+        }
+    </script>
+</body>
+</html>

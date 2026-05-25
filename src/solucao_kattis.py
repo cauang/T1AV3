@@ -1,7 +1,88 @@
 import sys
-from src.graph import EdgeWeightedGraph, Edge
-from src.mst import KruskalMST
-from src.uf import UnionFind
+
+class UnionFind:
+    def __init__(self, n: int):
+        self._parent = list(range(n))
+        self._rank = [0] * n
+
+    def find(self, p: int) -> int:
+        root = p
+        while root != self._parent[root]:
+            root = self._parent[root]
+        curr = p
+        while curr != root:
+            nxt = self._parent[curr]
+            self._parent[curr] = root
+            curr = nxt
+        return root
+
+    def union(self, p: int, q: int) -> bool:
+        root_p = self.find(p)
+        root_q = self.find(q)
+        if root_p == root_q:
+            return False
+
+        if self._rank[root_p] < self._rank[root_q]:
+            self._parent[root_p] = root_q
+        elif self._rank[root_p] > self._rank[root_q]:
+            self._parent[root_q] = root_p
+        else:
+            self._parent[root_q] = root_p
+            self._rank[root_p] += 1
+
+        return True
+
+
+class Edge:
+    def __init__(self, v: int, w: int, weight: int):
+        self._v = v
+        self._w = w
+        self._weight = weight
+
+    def weight(self) -> int:
+        return self._weight
+
+    def either(self) -> int:
+        return self._v
+
+    def other(self, vertex: int) -> int:
+        if vertex == self._v:
+            return self._w
+        return self._v
+
+    def __lt__(self, other: 'Edge') -> bool:
+        return self._weight < other._weight
+
+
+class EdgeWeightedGraph:
+    def __init__(self, V: int):
+        self._V = V
+        self._edges = []
+
+    def V(self) -> int:
+        return self._V
+
+    def add_edge(self, edge: Edge) -> None:
+        self._edges.append(edge)
+
+    def edges(self):
+        return self._edges
+
+
+class KruskalMST:
+    def __init__(self, G: EdgeWeightedGraph, initial_uf: UnionFind, initial_weight: int):
+        self._weight = initial_weight
+        arestas = sorted(G.edges())
+        
+        for aresta in arestas:
+            v = aresta.either()
+            w = aresta.other(v)
+            if initial_uf.union(v, w):
+                self._weight += aresta.weight()
+
+    def weight(self) -> int:
+        return self._weight
+
 
 def resolver():
     dados = sys.stdin.read().split()
@@ -71,19 +152,16 @@ def resolver():
             curr_owner = owner[curr_cell]
             curr_dist = dist[curr_cell]
             
-            # Varre os 4 vizinhos no grid
             for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
                 if 0 <= nx <= 1000 and 0 <= ny <= 1000:
                     n_cell = nx * 1001 + ny
                     n_owner = owner[n_cell]
                     
                     if n_owner == -1:
-                        # Célula livre: o dono da frente a conquista
                         owner[n_cell] = curr_owner
                         dist[n_cell] = curr_dist + 1
                         q.append((nx, ny))
                     elif n_owner != curr_owner:
-                        # As frentes de dois pontos se encontraram
                         u, v = curr_owner, n_owner
                         if u > v:
                             u, v = v, u

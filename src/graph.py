@@ -18,7 +18,6 @@ class Edge:
         return self._v
 
     def __lt__(self, other: 'Edge') -> bool:
-        # Usado para ordenar as arestas pelo peso
         return self._weight < other._weight
 
 
